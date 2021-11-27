@@ -1,8 +1,30 @@
 import torch
 from torch import nn
 
-def train(model, variation, epoch_num, optimizer, data_loader_train, data_loader_test, checkpoints_dir_path,
+## in notebook
+from model import Zaremba, Embedding ## move to notebook
+from preprocess import preprocess_ptb_files
+import torch
+word_vec_size = 200
+vocab_size = 10000 ## need to be calculated
+num_layers = 2
+batch_size = 20
+sequence_length = 35
+variation = 'LSTM_no_DO'
+trn_data, val_data, tst_data = preprocess_ptb_files('/Users/shir.barzel/DeepLearningCourseOS/EX2/PTB/ptb.char.train.txt',
+                     '/Users/shir.barzel/DeepLearningCourseOS/EX2/PTB/ptb.char.valid.txt',
+                     '/Users/shir.barzel/DeepLearningCourseOS/EX2/PTB/ptb.char.test.txt') ## TODO
+model = Zaremba(word_vec_size, word_vec_size, vocab_size, num_layers, variation)
+embed = Embedding(vocab_size, word_vec_size)
+
+torch.utils.data.dataloader.DataLoader(trn_data, batch_size)
+train(model, embed, trn_data, val_data, tst_data)
+## in notebook
+
+def train(model, embed, variation, epoch_num, optimizer, data_loader_train, data_loader_test, checkpoints_dir_path,
     latest_checkpoint_path=""):
+
+
     train_acc_list = []
     test_acc_list = []
     epoch_list = []
@@ -103,3 +125,6 @@ def train(model, variation, epoch_num, optimizer, data_loader_train, data_loader
         print(f"Training accuracy: {acc_train}")
         print(f"Test accuracy:     {acc_test}")
         print(f"-----------------------------------------------")
+
+
+
