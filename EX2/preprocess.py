@@ -1,4 +1,5 @@
 import numpy as np
+import torch
 
 def preprocess_ptb_files(train_path, val_path, test_path):
     with open(train_path) as f:
@@ -18,16 +19,14 @@ def preprocess_ptb_files(train_path, val_path, test_path):
 
 def create_dataset(data, batch_size, seq_length):
     # Create list (samples, labels) of torch tensors of size (num_bat, batch_size, seq_length)
-    num_batches = len(data) // batch_size
-    data = data.view(num_batches * batch_size, 1)
+    data = torch.tensor(data)
+    num_batches = len(data) // (batch_size * seq_length)
+    data = data[:(data.size(0)//batch_size)*batch_size]
+    data = data.view(batch_size, -1)
     dataset = []
-    for bat_ind in range(num_batches):
-        x = []
-        y = []
-        for j in range(1, batch_size):
-            x_seq = data[bat_ind*batch_size + seq_length * (j - 1):bat_ind*batch_size+seq_length * j ]
-            y_seq = data[bat_ind*batch_size + seq_length * (j - 1) + 1:bat_ind*batch_size+seq_length * j + 1]
-            x.append(x_seq)
-            y.append(y_seq)
-        dataset.append((x, y))
+    for bat_ind in range(0, num_batches - 1): ## TODO check end of batches
+        x_batch = data[:, bat_ind * seq_length:bat_ind * seq_length + seq_length] ## TODO consider transpose
+        y_batch = data[:, bat_ind * seq_length + 1:bat_ind * seq_length + seq_length + 1]
+        dataset.append((x_batch, y_batch))
+    return dataset
 
