@@ -12,10 +12,11 @@ def preprocess_ptb_files(train_path, val_path, test_path):
         file = f.read()
         test_data = file[1:].split(' ')
     vocab = sorted(set(train_data))
-    trn_ind = np.asarray([vocab.index(word) for word in train_data])
-    val_ind = np.asarray([vocab.index(word) for word in val_data])
-    tst_ind = np.asarray([vocab.index(word) for word in test_data])
-    return trn_ind, val_ind, tst_ind
+    char2ind = {c: i for i, c in enumerate(vocab)}
+    trn = [char2ind[c] for c in train_data]
+    vld = [char2ind[c] for c in val_data]
+    tst = [char2ind[c] for c in test_data]
+    return np.array(trn).reshape(-1, 1), np.array(vld).reshape(-1, 1), np.array(tst).reshape(-1, 1)
 
 def create_dataset(data, batch_size, seq_length, device):
     # Create list (samples, labels) of torch tensors of size (num_bat, batch_size, seq_length)
