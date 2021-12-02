@@ -19,14 +19,14 @@ class Zaremba(nn.Module):
         self.variation = variation
         self.dropout = 0
         self.embed = Embedding(vocab_size, hidden_size)
-        self.LSTM = nn.LSTM(word_vec_size, hidden_size, num_layers, dropout=self.dropout, batch_first=True)
-        self.GRU = nn.GRU(word_vec_size, hidden_size, num_layers, dropout=self.dropout, batch_first=True)
+        self.LSTM = nn.LSTM(word_vec_size, hidden_size, num_layers, dropout=self.dropout)
+        self.GRU = nn.GRU(word_vec_size, hidden_size, num_layers, dropout=self.dropout)
         self.FC = nn.Linear(hidden_size, vocab_size)
         self.init_parameters()
 
     def init_parameters(self): ## TODO only for vocab
         for param in self.parameters():
-            nn.init.uniform_(param, -0.05, 0.05) ## TODO winit
+            nn.init.uniform_(param, -0.06, 0.06) ## TODO winit - according to paper decrease as hidden size decrease to 200
 
     def forward(self, x): ## x is an index of a word in a sorted vocab
         x = self.embed(x)
