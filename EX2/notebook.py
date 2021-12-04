@@ -57,10 +57,9 @@ events_dir = checkpoints_dir_path + slash + 'events' + slash
 writer = SummaryWriter(events_dir)
 
 model = Zaremba(word_vec_size, word_vec_size, vocab_size, num_layers, variation)
-embed = Embedding(vocab_size, word_vec_size)
 optimizer = optim.Adam(params=model.parameters(), lr=lr, weight_decay=0)
 
 model.to(device)
 print("starting train")
 train(model, trn_dataset, val_dataset, tst_dataset, batch_size, sequence_length, lr, lr_factor, lr_change_epoch,
-      max_grad_norm, embed, device, variation, optimizer, epoch_num, checkpoints_dir_path, writer)
+      max_grad_norm, device, variation, optimizer, epoch_num, checkpoints_dir_path, writer)

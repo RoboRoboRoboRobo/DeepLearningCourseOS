@@ -22,7 +22,7 @@ def evaluateModel(data, model, batch_size, device):
     return torch.exp(loss/(batch_size*len(data)))
 
 def train(model, trn_dataset, val_dataset, tst_dataset, batch_size, sequence_length, lr, lr_factor, lr_change_epoch,
-          max_grad_norm, embed, device, variation, optimizer, epoch_num, checkpoints_dir_path, writer,
+          max_grad_norm, device, variation, optimizer, epoch_num, checkpoints_dir_path, writer,
           latest_checkpoint_path=""):
     train_acc_list = []
     test_acc_list = []
