@@ -4,21 +4,48 @@ from torch.autograd import Variable
 from torch import optim
 import numpy as np
 
+''' ORIGINAL evaluateModel '''
+# def evaluateModel(dataset, model, criterion, device):
+#     with torch.no_grad():
+#         # losses = []
+#         loss = 0
+#         for i, (x, y) in enumerate(dataset):
+#             outputs = model(x)
+#             outputs = outputs.reshape(-1, outputs.shape[-1])
+#             outputs = Variable(outputs).to(device)
+#             y = y.reshape(-1)
+#             loss += torch.exp(criterion(outputs, y))
+#             if i % 500 == 0:
+#                 print(f"Finished batch number {i}/{len(dataset)} in evaluation")
+#
+#         return loss / len(dataset)
 
-def evaluateModel(dataset, model, criterion, device):
+# REFERENCE nll_loss
+def nll_loss(scores, y):
+    batch_size = y.size(1)
+    expscores = scores.exp()
+    # probabilities = torch.reshape(expscores / expscores.sum(1, keepdim = True), (700, 10000)) # REF requirement ???
+    probabilities = expscores / expscores.sum(1, keepdim=True)
+    prob_reshaped = torch.reshape(probabilities, (-1, scores.shape[-1]))
+    y_reshaped = torch.reshape(y, (len(y),))
+    answerprobs = prob_reshaped[range(len(y_reshaped)), y_reshaped]
+    #I multiply by batch_size as in the original paper
+    #Zaremba et al. sum the loss over batches but average these over time.
+    return torch.mean(-torch.log(answerprobs) * batch_size)
+
+
+# REFERENCE perplexity -> OURS evaluateModel
+def evaluateModel(data, model, batch_size):
     with torch.no_grad():
-        # losses = []
         loss = 0
-        for i, (x, y) in enumerate(dataset):
-            outputs = model(x)
-            outputs = outputs.reshape(-1, outputs.shape[-1])
-            outputs = Variable(outputs).to(device)
-            y = y.reshape(-1)
-            loss += torch.exp(criterion(outputs, y))
-            if i % 500 == 0:
-                print(f"Finished batch number {i}/{len(dataset)} in evaluation")
-
-        return loss / len(dataset)
+        # states = model.state_init(batch_size) # OURS doesn't use states
+        for x, y in data:
+            # scores, states = model(x, states) # ORIGINAL
+            scores = model(x) # scores <-> outputs
+            scores = Variable(scores).to(device)
+            loss += nll_loss(scores, y)
+            #Again with the sum/average implementation described in 'nll_loss'.
+    return torch.exp(loss/(batch_size*len(data)))
 
 
 def train(model, trn_dataset, val_dataset, tst_dataset, batch_size, sequence_length, lr, lr_factor, lr_change_epoch,

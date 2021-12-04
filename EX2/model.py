@@ -36,7 +36,7 @@ class Zaremba(nn.Module):
             x, _ = self.LSTM(x)
         elif 'GRU' in self.variation:
             x, _ = self.GRU(x)
-        x = self.FC(x)
-        return x
+        scores = self.FC(x)
+        return scores
 
 

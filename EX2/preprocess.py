@@ -12,10 +12,10 @@ def preprocess_ptb_files(train_path, val_path, test_path):
         file = f.read()
         test_data = file[1:].split(' ')
     vocab = sorted(set(train_data))
-    char2ind = {c: i for i, c in enumerate(vocab)}
-    trn = [char2ind[c] for c in train_data]
-    vld = [char2ind[c] for c in val_data]
-    tst = [char2ind[c] for c in test_data]
+    word2ind = {w: i for i, w in enumerate(vocab)}
+    trn = [word2ind[w] for w in train_data]
+    vld = [word2ind[w] for w in val_data]
+    tst = [word2ind[w] for w in test_data]
     return np.array(trn).reshape(-1, 1), np.array(vld).reshape(-1, 1), np.array(tst).reshape(-1, 1)
 
 def create_dataset(data, batch_size, seq_length, device):
