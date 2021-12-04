@@ -1,9 +1,11 @@
-from model import Zaremba, Embedding ## move to notebook
+from model import Zaremba, Embedding
 from preprocess import preprocess_ptb_files, create_dataset
 import torch
 from torch import optim
 from torch.utils.tensorboard import SummaryWriter
 from train import train
+from datetime import datetime
+import os
 
 word_vec_size = 200
 vocab_size = 10000  ## need to be calculated
@@ -21,7 +23,8 @@ variation = 'LSTM'
 OFIR   C:\\Users\ofir-kr\PycharmProjects\DeepLearningCourseOS\EX2\\"
 SHIR   /Users/shir.barzel/DeepLearningCourseOS/EX2/
 """
-user = "Ofir"
+user = "Shir"
+
 if user == "Ofir":
     slash ="\\"
     ptb_dir = "C:\\Users\\ofir-kr\\PycharmProjects\\DeepLearningCourseOS\\EX2\PTB\\"
@@ -43,15 +46,15 @@ trn_dataset = create_dataset(trn_data, batch_size, sequence_length, device)
 val_dataset = create_dataset(val_data, batch_size, sequence_length, device)
 tst_dataset = create_dataset(tst_data, batch_size, sequence_length, device)
 
-# now = datetime.now()
-# time = now.strftime('%d_%m_%y_%H_%M')
-# path_results_dir = f'{root_path}/ex2_301917670_302921366/results/{time}'
-# if not os.path.exists(path_results_dir):
-#   os.makedirs(f'{path_results_dir}/checkpoints')
-#   os.makedirs(f'{path_results_dir}/events')
+now = datetime.now()
+time = now.strftime('%d_%m_%y_%H_%M')
+checkpoints_dir_path = f'{checkpoints_dir_path}/{time}'
+if not os.path.exists(checkpoints_dir_path):
+  os.makedirs(f'{checkpoints_dir_path}/checkpoints')
+  os.makedirs(f'{checkpoints_dir_path}/events')
 
-# events_dir = checkpoints_dir_path + slash + 'events' + slash
-# writer = SummaryWriter(events_dir)
+events_dir = checkpoints_dir_path + slash + 'events' + slash
+writer = SummaryWriter(events_dir)
 
 model = Zaremba(word_vec_size, word_vec_size, vocab_size, num_layers, variation)
 embed = Embedding(vocab_size, word_vec_size)
@@ -60,4 +63,4 @@ optimizer = optim.Adam(params=model.parameters(), lr=lr, weight_decay=0)
 model.to(device)
 print("starting train")
 train(model, trn_dataset, val_dataset, tst_dataset, batch_size, sequence_length, lr, lr_factor, lr_change_epoch,
-      max_grad_norm, embed, device, variation, optimizer, epoch_num, checkpoints_dir_path, writer=0)
+      max_grad_norm, embed, device, variation, optimizer, epoch_num, checkpoints_dir_path, writer)
