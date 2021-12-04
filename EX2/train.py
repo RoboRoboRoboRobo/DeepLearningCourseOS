@@ -93,13 +93,13 @@ def train(model, trn_dataset, val_dataset, tst_dataset, batch_size, sequence_len
             # x = embed(x) ## seq_len x batch_size x word_vec_size (35x20x200)
             # y = embed(y) ## seq_len x batch_size x word_vec_size (35x20x200)
             model.zero_grad()
-            x = model(x)  ## tensor in the size of vocab_size over batch size (20 x 1 x 10,000)
+            scores = model(x)  ## tensor in the size of vocab_size over batch size (20 x 1 x 10,000)
 
             # obtain loss
-            x = torch.exp(x)
-            x = x.view(-1, model.embed.vocab_size)
+            exp_scores = torch.exp(scores)
+            exp_scores = exp_scores.view(-1, model.embed.vocab_size)
             y = y.reshape(batch_size * sequence_length)
-            loss = criterion(x, y)
+            loss = criterion(exp_scores, y)
 
             # compute gradients
             loss.backward()

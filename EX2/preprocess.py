@@ -20,7 +20,7 @@ def preprocess_ptb_files(train_path, val_path, test_path):
 
 def create_dataset(data, batch_size, seq_length, device):
     # Create list (samples, labels) of torch tensors of size (num_bat, batch_size, seq_length)
-    data = torch.tensor(data)
+    data = torch.tensor(data, dtype=torch.long)
     if device.type == 'cuda':
       data = data.cuda()
     num_batches = len(data) // (batch_size * seq_length)
