@@ -1,36 +1,50 @@
-## in notebook
 from model import Zaremba, Embedding ## move to notebook
 from preprocess import preprocess_ptb_files, create_dataset
 import torch
+from torch import optim
+from torch.utils.tensorboard import SummaryWriter
+from train import train
+
 word_vec_size = 200
 vocab_size = 10000 ## need to be calculated
 num_layers = 2
 batch_size = 20
 sequence_length = 35
-lr = 0.001
+lr = 1
+lr_factor = 1.3 # decrease as hidden size decrease
+lr_change_epoch = 3
 epoch_num = 100
-variation = 'LSTM_no_DO'
-checkpoints_dir_path = '/Users/shir.barzel/DeepLearningCourseOS/EX2/results'
-trn_data, val_data, tst_data = preprocess_ptb_files('/Users/shir.barzel/DeepLearningCourseOS/EX2/PTB/ptb.char.train.txt',
-                     '/Users/shir.barzel/DeepLearningCourseOS/EX2/PTB/ptb.char.valid.txt',
-                     '/Users/shir.barzel/DeepLearningCourseOS/EX2/PTB/ptb.char.test.txt') ## TODO
+max_grad_norm = 3
+variation = 'LSTM'
 
-trn_dataset = create_dataset(trn_data, batch_size, sequence_length)
-val_dataset = create_dataset(val_data, batch_size, sequence_length)
-tst_dataset = create_dataset(tst_data, batch_size, sequence_length)
+
+trn_data, val_data, tst_data = preprocess_ptb_files('/Users/shir.barzel/DeepLearningCourseOS/EX2/PTB/ptb.train.txt',
+                     '/Users/shir.barzel/DeepLearningCourseOS/EX2/PTB/ptb.valid.txt',
+                     '/Users/shir.barzel/DeepLearningCourseOS/EX2/PTB/ptb.test.txt') ## TODO
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 print(device)
 
+trn_dataset = create_dataset(trn_data, batch_size, sequence_length, device)
+val_dataset = create_dataset(val_data, batch_size, sequence_length, device)
+tst_dataset = create_dataset(tst_data, batch_size, sequence_length, device)
+
+# now = datetime.now()
+# time = now.strftime('%d_%m_%y_%H_%M')
+# path_results_dir = f'{root_path}/ex2_301917670_302921366/results/{time}'
+# if not os.path.exists(path_results_dir):
+#   os.makedirs(f'{path_results_dir}/checkpoints')
+#   os.makedirs(f'{path_results_dir}/events')
+
+checkpoints_dir_path = '/Users/shir.barzel/DeepLearningCourseOS/EX2/results'
+# events_dir = checkpoints_dir_path + '/events/'
+# writer = SummaryWriter(events_dir)
+
 model = Zaremba(word_vec_size, word_vec_size, vocab_size, num_layers, variation)
 embed = Embedding(vocab_size, word_vec_size)
-optimizer = optim.Adam(params = model.parameters(), lr=lr, weight_decay=0)
-
-events_dir = assignment_path + '/events/'
-writer = SummaryWriter(events_dir)
+optimizer = optim.Adam(params = model.parameters(), lr = lr, weight_decay=0)
 
 model.to(device)
-train(model, trn_dataset[:5], val_dataset[:5], tst_dataset[:5],
-      embed, device, variation, optimizer, epoch_num, checkpoints_dir_path, writer) # TODO remove 5
-## in notebook
-
+print("starting train")
+train(model, trn_dataset, val_dataset, tst_dataset, batch_size, sequence_length, lr, lr_factor, lr_change_epoch,
+      max_grad_norm, embed, device, variation, optimizer, epoch_num, checkpoints_dir_path, writer = 0)
