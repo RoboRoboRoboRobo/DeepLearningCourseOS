@@ -35,7 +35,7 @@ def nll_loss(scores, y):
 
 
 # REFERENCE perplexity -> OURS evaluateModel
-def evaluateModel(data, model, batch_size):
+def evaluateModel(data, model, batch_size, device):
     with torch.no_grad():
         loss = 0
         # states = model.state_init(batch_size) # OURS doesn't use states
@@ -80,7 +80,6 @@ def train(model, trn_dataset, val_dataset, tst_dataset, batch_size, sequence_len
         running_loss = 0
 
         # batch loop
-        # for (x, y) in trn_dataset:
         for i, (x, y) in enumerate(trn_dataset):  ## TODO move back
             # move input and output to GPU
             x = Variable(x).to(device)
