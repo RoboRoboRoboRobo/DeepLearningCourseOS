@@ -47,6 +47,7 @@ def train(model, trn_dataset, val_dataset, tst_dataset, batch_size, sequence_len
     for e in epochs_range:
         model.train()
         if e >= lr_change_epoch:
+            print(f"Updating lr from {lr} to {lr / lr_factor}")
             lr /= lr_factor
             for g in optimizer.param_groups:
                 g['lr'] = lr
