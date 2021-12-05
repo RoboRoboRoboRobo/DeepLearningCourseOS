@@ -27,8 +27,8 @@ def create_dataset(data, batch_size, seq_length, device):
     data = data[:(data.size(0)//batch_size)*batch_size]
     data = data.view(batch_size, -1)
     dataset = []
-    for bat_ind in range(0, num_batches - 1): ## TODO check end of batches
-        x_batch = data[:, bat_ind * seq_length:bat_ind * seq_length + seq_length].transpose(1, 0) ## TODO consider transpose
+    for bat_ind in range(0, num_batches - 1):
+        x_batch = data[:, bat_ind * seq_length:bat_ind * seq_length + seq_length].transpose(1, 0)
         y_batch = data[:, bat_ind * seq_length + 1:bat_ind * seq_length + seq_length + 1].transpose(1, 0)
         dataset.append((x_batch, y_batch))
     return dataset

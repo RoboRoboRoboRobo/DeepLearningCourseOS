@@ -25,11 +25,6 @@ def evaluateModel(data, model, batch_size, device):
 def train(model, trn_dataset, val_dataset, tst_dataset, batch_size, sequence_length, lr, lr_factor, lr_change_epoch,
           max_grad_norm, device, variation, optimizer, epoch_num, checkpoints_dir_path, writer,
           latest_checkpoint_path=""):
-    train_acc_list = []
-    test_acc_list = []
-    epoch_list = []
-    criterion = nn.CrossEntropyLoss()
-
     # checkpoints handling
     if latest_checkpoint_path == "":
         first_epoch = 0
@@ -42,7 +37,7 @@ def train(model, trn_dataset, val_dataset, tst_dataset, batch_size, sequence_len
 
     # epoch iteration range
     epochs_range = range(first_epoch, epoch_num)
-    print(f"epochs_range = {epochs_range}")
+    print(f"Epochs range = {epochs_range}")
 
     # epoch loop
     for e in epochs_range:
@@ -51,8 +46,8 @@ def train(model, trn_dataset, val_dataset, tst_dataset, batch_size, sequence_len
         if e >= lr_change_epoch:
             print(f"Updating lr from {lr} to {lr / lr_factor}")
             lr /= lr_factor
-            for g in optimizer.param_groups:
-                g['lr'] = lr
+            # for g in optimizer.param_groups:
+            #     g['lr'] = lr
         running_loss = 0
         # batch loop
         for i, (x, y) in enumerate(trn_dataset):
@@ -80,9 +75,7 @@ def train(model, trn_dataset, val_dataset, tst_dataset, batch_size, sequence_len
                 print(f"Train : Batch num: {i}/{len(trn_dataset)}, Loss: {running_loss / i}")
 
         # deactivate dropout and batch normalization
-        if ('DO' in variation):
-            model.eval()
-            # compute accuracies
+        model.eval()
         perplexity_trn = evaluateModel(trn_dataset, model, batch_size, device)
         perplexity_val = evaluateModel(val_dataset, model, batch_size, device)
         perplexity_tst = evaluateModel(tst_dataset, model, batch_size, device)
