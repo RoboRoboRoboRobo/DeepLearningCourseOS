@@ -17,25 +17,30 @@ class Zaremba(nn.Module):
         super(Zaremba, self).__init__()
         ## Optional variations
         self.variation = variation
-        self.dropout = nn.Dropout(p=0.22)
+        self.dropout = nn.Dropout(p=0.5)
+        self.num_layers = num_layers
         self.embed = Embedding(vocab_size, hidden_size)
-        self.LSTM = nn.LSTM(word_vec_size, hidden_size, num_layers)
-        self.GRU = nn.GRU(word_vec_size, hidden_size, num_layers)
+        self.LSTM = nn.LSTM(word_vec_size, hidden_size)
+        self.GRU = nn.GRU(word_vec_size, hidden_size)
         self.FC = nn.Linear(hidden_size, vocab_size)
         self.init_parameters()
 
     def init_parameters(self):  ## TODO only for vocab
         for param in self.parameters():
-            nn.init.uniform_(param, -0.06, 0.06)  ## TODO winit - according to paper decrease as hidden size decrease to 200
+            nn.init.uniform_(param, -0.055, 0.055)  ## According to paper increased as hidden size decrease to 200
 
     def forward(self, x):  ## x is an index of a word in a sorted vocab
         x = self.embed(x)
         if 'LSTM' in self.variation:
-            x, _ = self.LSTM(x)
-        elif 'GRU' in self.variation:
-            x, _ = self.GRU(x)
-        if 'DO' in self.variation:
-            x = self.dropout(x)
+            for i in range(self.num_layers):
+                x, _ = self.LSTM(x)
+                if 'DO' in self.variation:
+                    x = self.dropout(x)
+        if 'GRU' in self.variation:
+            for i in range(self.num_layers):
+                x, _ = self.GRU(x)
+                if 'DO' in self.variation:
+                    x = self.dropout(x)
         scores = self.FC(x)
         return scores
 
