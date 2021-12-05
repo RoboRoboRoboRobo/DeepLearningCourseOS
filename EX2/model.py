@@ -17,7 +17,7 @@ class Zaremba(nn.Module):
         super(Zaremba, self).__init__()
         ## Optional variations
         self.variation = variation
-        self.dropout = nn.Dropout(p=0.5)
+        self.dropout = nn.Dropout(p=0.4)
         self.num_layers = num_layers
         self.hidden_size = hidden_size
         self.embed = Embedding(vocab_size, hidden_size)
