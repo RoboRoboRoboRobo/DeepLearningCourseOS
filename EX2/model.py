@@ -17,10 +17,10 @@ class Zaremba(nn.Module):
         super(Zaremba, self).__init__()
         ## Optional variations
         self.variation = variation
-        self.dropout = 0
+        self.dropout = nn.Dropout(p=0.22)
         self.embed = Embedding(vocab_size, hidden_size)
-        self.LSTM = nn.LSTM(word_vec_size, hidden_size, num_layers, dropout=self.dropout)
-        self.GRU = nn.GRU(word_vec_size, hidden_size, num_layers, dropout=self.dropout)
+        self.LSTM = nn.LSTM(word_vec_size, hidden_size, num_layers)
+        self.GRU = nn.GRU(word_vec_size, hidden_size, num_layers)
         self.FC = nn.Linear(hidden_size, vocab_size)
         self.init_parameters()
 
@@ -30,12 +30,12 @@ class Zaremba(nn.Module):
 
     def forward(self, x):  ## x is an index of a word in a sorted vocab
         x = self.embed(x)
-        if 'DO' in self.variation:
-            self.dropout = 0.2  # Paper
         if 'LSTM' in self.variation:
             x, _ = self.LSTM(x)
         elif 'GRU' in self.variation:
             x, _ = self.GRU(x)
+        if 'DO' in self.variation:
+            x = self.dropout(x)
         scores = self.FC(x)
         return scores
 
