@@ -54,7 +54,9 @@ def train(model, trn_dataset, val_dataset, tst_dataset, batch_size, sequence_len
             # move input and output to GPU
             x = Variable(x).to(device)
             y = Variable(y).to(device)
-            states = Variable(states).to(device)
+            for state in states:
+                for param in state:
+                    param = Variable(param).to(device)
             model.zero_grad()
             states = model.detach(states)
             scores, states = model(x, states)  ## tensor in the size of vocab_size over batch size (20 x 1 x 10,000)
