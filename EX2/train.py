@@ -18,7 +18,7 @@ def evaluateModel(data, model, batch_size, device):
         states = model.state_init(batch_size, device)
         for x, y in data:
             scores, states = model(x, states)  # scores <-> outputs
-            scores = Variable(scores).to(device)
+            # scores = Variable(scores).to(device)
             loss += nll_loss(scores, y)
     return torch.exp(loss/(batch_size*len(data)))
 
@@ -52,11 +52,11 @@ def train(model, trn_dataset, val_dataset, tst_dataset, batch_size, sequence_len
         # batch loop
         for i, (x, y) in enumerate(trn_dataset):
             # move input and output to GPU
-            x = Variable(x).to(device)
-            y = Variable(y).to(device)
-            for state in states:
-                for param in state:
-                    param = Variable(param).to(device)
+            # x = Variable(x).to(device)
+            # y = Variable(y).to(device)
+            # for state in states:
+            #     for param in state:
+            #         param = Variable(param).to(device)
             model.zero_grad()
             states = model.detach(states)
             scores, states = model(x, states)  ## tensor in the size of vocab_size over batch size (20 x 1 x 10,000)
