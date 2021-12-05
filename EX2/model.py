@@ -19,6 +19,7 @@ class Zaremba(nn.Module):
         self.variation = variation
         self.dropout = nn.Dropout(p=0.5)
         self.num_layers = num_layers
+        self.hidden_size = hidden_size
         self.embed = Embedding(vocab_size, hidden_size)
         self.LSTM = nn.LSTM(word_vec_size, hidden_size)
         self.GRU = nn.GRU(word_vec_size, hidden_size)
@@ -29,19 +30,27 @@ class Zaremba(nn.Module):
         for param in self.parameters():
             nn.init.uniform_(param, -0.055, 0.055)  ## According to paper increased as hidden size decrease to 200
 
-    def forward(self, x):  ## x is an index of a word in a sorted vocab
+    def state_init(self, batch_size, device):
+        dev = next(self.parameters()).device
+        states = (torch.zeros(1, batch_size, self.hidden_size, device=device), torch.zeros(1, batch_size, self.hidden_size, device=device))
+        return states
+
+    def detach(self, states):
+        return (states[0].detach(), states[1].detach())
+
+    def forward(self, x, states):  ## x is an index of a word in a sorted vocab
         x = self.embed(x)
         if 'LSTM' in self.variation:
             for i in range(self.num_layers):
-                x, _ = self.LSTM(x)
+                x, states = self.LSTM(x)
                 if 'DO' in self.variation:
                     x = self.dropout(x)
         if 'GRU' in self.variation:
             for i in range(self.num_layers):
-                x, _ = self.GRU(x)
+                x, states = self.GRU(x, states)
                 if 'DO' in self.variation:
                     x = self.dropout(x)
         scores = self.FC(x)
-        return scores
+        return scores, states
 
 

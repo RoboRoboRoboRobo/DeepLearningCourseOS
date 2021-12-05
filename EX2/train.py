@@ -15,8 +15,9 @@ def nll_loss(scores, y):
 def evaluateModel(data, model, batch_size, device):
     with torch.no_grad():
         loss = 0
+        states = model.state_init(batch_size, device)
         for x, y in data:
-            scores = model(x)  # scores <-> outputs
+            scores, states = model(x, states)  # scores <-> outputs
             scores = Variable(scores).to(device)
             loss += nll_loss(scores, y)
     return torch.exp(loss/(batch_size*len(data)))
@@ -45,6 +46,7 @@ def train(model, trn_dataset, val_dataset, tst_dataset, batch_size, sequence_len
 
     # epoch loop
     for e in epochs_range:
+        states = model.state_init(batch_size, device)
         model.train()
         if e >= lr_change_epoch:
             print(f"Updating lr from {lr} to {lr / lr_factor}")
@@ -58,7 +60,8 @@ def train(model, trn_dataset, val_dataset, tst_dataset, batch_size, sequence_len
             x = Variable(x).to(device)
             y = Variable(y).to(device)
             model.zero_grad()
-            scores = model(x)  ## tensor in the size of vocab_size over batch size (20 x 1 x 10,000)
+            states = model.detach(states)
+            scores, states = model(x, states)  ## tensor in the size of vocab_size over batch size (20 x 1 x 10,000)
             loss = nll_loss(scores, y)
             # compute gradients
             loss.backward()
