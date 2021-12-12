@@ -122,8 +122,8 @@ def train(data, model, epochs, epoch_threshold, lr, factor, max_norm):
                       "wps = {:d}, ".format(round(total_words/(toc-tic))) +
                       "dw.norm() = {:.3f}, ".format(norm) +
                       "lr = {:.3f}, ".format(lr) +
-                      "since beginning = {:d} mins, ".format(round((toc-tic)/60)) + 
-                      "cuda memory = {:.3f} GBs".format(torch.cuda.max_memory_allocated()/1024/1024/1024))
+                      "since beginning = {:d} mins, ".format(round((toc-tic)/60)))
+                      # "cuda memory = {:.3f} GBs".format(torch.cuda.max_memory_allocated()/1024/1024/1024))
         model.eval()
         val_perp = perplexity(vld, model)
         print("Epoch : {:d} || Validation set perplexity : {:.3f}".format(epoch+1, val_perp))
