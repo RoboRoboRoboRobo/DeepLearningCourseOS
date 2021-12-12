@@ -12,15 +12,16 @@ def nll_loss(scores, y):
     answerprobs = probabilities[range(len(y.reshape(-1))), y.reshape(-1)]
     return torch.mean(-torch.log(answerprobs) * batch_size)
 
-def evaluateModel(data, model, batch_size, device):
+def evaluate_model(data, model, batch_size, device):
     with torch.no_grad():
-        loss = 0
+        losses = []
         states = model.state_init(batch_size, device)
         for x, y in data:
             scores, states = model(x, states)  # scores <-> outputs
+            loss = nll_loss(scores, y)
             # scores = Variable(scores).to(device)
-            loss += nll_loss(scores, y)
-    return torch.exp(loss/(batch_size*len(data)))
+            losses.append(loss.data.item()/batch_size)
+    return np.exp(np.mean(losses))
 
 def train(model, trn_dataset, val_dataset, tst_dataset, batch_size, sequence_length, lr, lr_factor, lr_change_epoch,
           max_grad_norm, device, variation, optimizer, epoch_num, checkpoints_dir_path, writer,
@@ -52,11 +53,12 @@ def train(model, trn_dataset, val_dataset, tst_dataset, batch_size, sequence_len
         # batch loop
         for i, (x, y) in enumerate(trn_dataset):
             # move input and output to GPU
-            # x = Variable(x).to(device)
-            # y = Variable(y).to(device)
-            # for state in states:
-            #     for param in state:
-            #         param = Variable(param).to(device)
+            if device.type == 'cuda':
+                x = x.cuda()
+                y = y.cuda()
+                for state in states:
+                    for param in state:
+                        param = param.cuda()
             model.zero_grad()
             states = model.detach(states)
             scores, states = model(x, states)  ## tensor in the size of vocab_size over batch size (20 x 1 x 10,000)
@@ -79,9 +81,9 @@ def train(model, trn_dataset, val_dataset, tst_dataset, batch_size, sequence_len
 
         # deactivate dropout and batch normalization
         model.eval()
-        perplexity_trn = evaluateModel(trn_dataset, model, batch_size, device)
-        perplexity_val = evaluateModel(val_dataset, model, batch_size, device)
-        perplexity_tst = evaluateModel(tst_dataset, model, batch_size, device)
+        perplexity_trn = evaluate_model(trn_dataset, model, batch_size, device)
+        perplexity_val = evaluate_model(val_dataset, model, batch_size, device)
+        perplexity_tst = evaluate_model(tst_dataset, model, batch_size, device)
         # save checkpoint at the end of each epoch
         curr_checkpoint_path = checkpoints_dir_path + f'/Zaremba-{variation}-{e}.pth'
         print(curr_checkpoint_path)

@@ -22,6 +22,8 @@ class Zaremba(nn.Module):
         self.embed = Embedding(vocab_size, hidden_size)
         self.lstms = [nn.LSTM(hidden_size, hidden_size) for i in range(num_layers)]
         self.grus = [nn.GRU(hidden_size, hidden_size) for i in range(num_layers)]
+        self.lstms = nn.ModuleList(self.lstms)
+        self.grus = nn.ModuleList(self.grus)
         self.FC = nn.Linear(hidden_size, vocab_size)
         self.dropout = nn.Dropout(p=0.4)
         self.init_parameters()
@@ -31,15 +33,24 @@ class Zaremba(nn.Module):
             nn.init.uniform_(param, -0.055, 0.055)  ## According to paper increased as hidden size decrease to 200
 
     def state_init(self, batch_size, device):
-        dev = next(self.parameters()).device
-        if 'LSTM' in self.variation:
-            states = [(torch.zeros(1, batch_size, layer.hidden_size, device = device),
-                       torch.zeros(1, batch_size, layer.hidden_size, device = device))
-                       for layer in self.lstms]
-        if 'GRU' in self.variation:
-            states = [(torch.zeros(1, batch_size, layer.hidden_size, device = device),
-                       torch.zeros(1, batch_size, layer.hidden_size, device = device))
-                       for layer in self.grus]
+        if device.type == 'cuda':
+            if 'LSTM' in self.variation:
+                states = [(torch.zeros(1, batch_size, layer.hidden_size).cuda(),
+                           torch.zeros(1, batch_size, layer.hidden_size).cuda())
+                           for layer in self.lstms]
+            if 'GRU' in self.variation:
+                states = [(torch.zeros(1, batch_size, layer.hidden_size).cuda(),
+                           torch.zeros(1, batch_size, layer.hidden_size).cuda())
+                           for layer in self.grus]
+        else:
+            if 'LSTM' in self.variation:
+                states = [(torch.zeros(1, batch_size, layer.hidden_size),
+                           torch.zeros(1, batch_size, layer.hidden_size))
+                           for layer in self.lstms]
+            if 'GRU' in self.variation:
+                states = [(torch.zeros(1, batch_size, layer.hidden_size),
+                           torch.zeros(1, batch_size, layer.hidden_size))
+                           for layer in self.grus]
         return states
 
     def detach(self, states):

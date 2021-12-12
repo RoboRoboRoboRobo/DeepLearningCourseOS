@@ -35,7 +35,7 @@ elif user == "Shir":
 
 trn_data, val_data, tst_data = preprocess_ptb_files(ptb_dir + 'ptb.train.txt',
                                                     ptb_dir + 'ptb.valid.txt',
-                                                    ptb_dir + 'ptb.test.txt')  ## TODO
+                                                    ptb_dir + 'ptb.test.txt')
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 print(device)
@@ -55,7 +55,7 @@ events_dir = checkpoints_dir_path + slash + 'events' + slash
 writer = SummaryWriter(events_dir)
 
 mode = 'train'
-variation_list = ['LSTM', 'LSTM-DO', 'GRU', 'GRU-DO']
+variation_list = ['GRU', 'GRU-DO', 'LSTM-DO', 'LSTM']
 ## train all models with dropout, weight decay and batch normalization options
 if mode == 'train':
     checkpoint_e_start = 0
