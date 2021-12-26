@@ -96,7 +96,7 @@ class VAE(nn.Module):
 
         for m in self.modules():
             if isinstance(m, nn.Linear):
-                m.weight.data.normal_(-0.08, 0.08)
+                init.xavier_normal(m.weight.data)
                 if m.bias is not None:
                     m.bias.data.zero_()
 

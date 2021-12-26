@@ -1,9 +1,8 @@
 from VAE import VAE
+from Classifier import Classifier
+from train_classifier import train_classifier
 from train_vae import train_vae
 import torch
-from torch import nn  ## nn model
-import torch.nn.functional as F  # activation functions
-from torch.autograd import Variable
 from torchvision import datasets, transforms  # operations over images
 from torchvision.transforms import Normalize  # operations over images
 from torch import optim
@@ -21,9 +20,9 @@ batch_size = 16
 input_size = (batch_size, 28, 28)
 num_of_classes = 10
 h_dim = 230
-z_dim = 10
+z_dim = 50
 epoch_num = 25
-lr = 1e-2
+lr = 1e-3
 
 """" paths:
 OFIR   C:\\Users\ofir-kr\PycharmProjects\DeepLearningCourseOS\EX2\\"
@@ -86,9 +85,14 @@ if mode == 'train':
         cpt_path = ""
 
     model = VAE(input_size[1]**2, h_dim, z_dim)
-    optimizer = optim.Adam(params=model.parameters(), lr=lr)
+    optimizer = optim.Adam(params=model.parameters(), lr=lr, weight_decay=0.03)
     model.to(device)
-    print(f"Starting train")
+    print(f"Starting train VAE")
     train_vae(model, data_loader_train, data_loader_test, batch_size, lr,
-          device, optimizer, epoch_num, checkpoints_dir_path, writer,
+          device, optimizer, 1, checkpoints_dir_path, writer,
+          latest_checkpoint_path="")
+
+    number_of_labeled_samples = 3000
+    train_classifier(model.encoder, data_loader_train, data_loader_test, batch_size, lr,
+          device, optimizer, epoch_num, checkpoints_dir_path, writer, number_of_labeled_samples,
           latest_checkpoint_path="")
