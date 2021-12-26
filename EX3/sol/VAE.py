@@ -26,10 +26,10 @@ class Encoder(nn.Module):
 
 
     def forward(self, x):
-        x = self.linear_1(x)
-        x = self.linear_2(x)
+        x = F.relu(self.linear_1(x))
+        x = F.relu(self.linear_2(x))
         z, mu_z, var_z = self.gauss_params(x)
-        return z, mu_z, var_z
+        return z, mu_z, torch.log(var_z)
 
 class GaussParamEst(nn.Module):
     def __init__(self, dim_hidden, dim_z):
@@ -71,8 +71,8 @@ class Decoder(nn.Module):
         self.output_activation = nn.Sigmoid()
 
     def forward(self, x):
-        x = self.linear_1(x)
-        x = self.linear_2(x)
+        x = F.relu(self.linear_1(x))
+        x = F.relu(self.linear_2(x))
         return self.output_activation(self.linear_3(x))
 
 
