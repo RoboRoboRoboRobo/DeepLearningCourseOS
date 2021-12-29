@@ -2,7 +2,7 @@ import torch
 
 
 def elbo_loss(x, x_hat, kl_divergence):
-    return torch.mean(torch.norm(x - x_hat, dim=-1)**2 + kl_divergence)
+    return torch.mean(torch.norm(x - x_hat, dim=-1)**2 + 0.1 * kl_divergence)
 
 def evaluate_model(data, model, device):
     with torch.no_grad():
@@ -14,6 +14,7 @@ def evaluate_model(data, model, device):
 
 def train_vae(model, trn_dataset, tst_dataset, batch_size, lr,
           device, optimizer, epoch_num, checkpoints_dir_path, writer,
+          lr_factor, lr_change_epoch, max_grad_norm,
           latest_checkpoint_path=""):
     # checkpoints handling
     if latest_checkpoint_path == "":
@@ -31,6 +32,9 @@ def train_vae(model, trn_dataset, tst_dataset, batch_size, lr,
     # epoch loop
 
     for e in epochs_range:
+        if e >= lr_change_epoch:
+            print(f"Updating lr from {lr} to {lr / lr_factor}")
+            lr /= lr_factor
         model.train()
 
         running_loss = 0
@@ -51,6 +55,12 @@ def train_vae(model, trn_dataset, tst_dataset, batch_size, lr,
 
             optimizer.step()
             optimizer.zero_grad()
+
+            with torch.no_grad():
+                torch.nn.utils.clip_grad_norm_(model.parameters(), max_grad_norm)
+                for param in model.parameters():
+                    if not param.grad is None:
+                        param -= lr * param.grad
 
             if i % 500 == 0 and i > 0:
                 print(f"Train : Batch num: {i}/{len(trn_dataset)}, Loss: {running_loss / i}")
