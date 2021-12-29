@@ -1,16 +1,15 @@
 import torch
 
-
-def elbo_loss(x, x_hat, kl_divergence):
-    return torch.mean(torch.norm(x - x_hat, dim=-1)**2 + 0.3 * kl_divergence)
-
-def evaluate_model(data, model, device):
-    with torch.no_grad():
-        mses = []
-        for x, _ in data:
-            x_hat = model(x)
-            mses.append(torch.mean(torch.norm(x - x_hat, dim=-1)**2))
-    return torch.mean(torch.Tensor(mses))**0.5
+# def elbo_loss(x, x_hat, kl_divergence):
+#     return torch.mean(torch.norm(x - x_hat, dim=-1)**2 + 0.3 * kl_divergence)
+#
+# def evaluate_model(data, model, device):
+#     with torch.no_grad():
+#         mses = []
+#         for x, _ in data:
+#             x_hat = model(x)
+#             mses.append(torch.mean(torch.norm(x - x_hat, dim=-1)**2))
+#     return torch.mean(torch.Tensor(mses))**0.5
 
 def train_vae(model, trn_dataset, tst_dataset, batch_size, lr,
           device, optimizer, epoch_num, checkpoints_dir_path, writer,

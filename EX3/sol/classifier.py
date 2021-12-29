@@ -27,7 +27,6 @@ def train_classifier(encoder, trn_dataset, number_of_labeled_samples, num_of_cla
     svc = svm.SVC(kernel='rbf', C=1).fit(z_train.detach().numpy(), np.array(y_train))
     return svc
 
-
 def evaluate_classifier(classifier, encoder, data_loader):
     x_list = []
     y_list = []

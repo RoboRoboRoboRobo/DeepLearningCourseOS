@@ -1,28 +1,26 @@
-from VAE import VAE
-from classifier import train_classifier
-from classifier import evaluate_classifier
-from train_vae import train_vae
 import torch
 from torchvision import datasets, transforms  # operations over images
 from torchvision.transforms import Normalize  # operations over images
 from torch import optim
 from datetime import datetime
-import matplotlib.pyplot as plt
 from torch.utils.tensorboard import SummaryWriter
 import os
+from gan_models import Generator, Discriminator
+from train_gan import train_gan
 
 #Assign cuda GPU located at location '0' to a variable
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 print(device)
 
 # algorithm parameters
-batch_size = 16
-input_size = (batch_size, 28, 28)
-num_of_classes = 10
-h_dim = 600
+batch_size = 64
 z_dim = 128
+input_image_size = (batch_size, 1, 28, 28)
+num_of_classes = 10
+dim_channels = 128
+
 epoch_num = 15
-lr = 1e-3
+lr = 2e-4
 lr_factor = 1.3
 lr_change_epoch = 100
 max_grad_norm = 100
@@ -92,26 +90,31 @@ if mode == 'train':
     else:
         cpt_path = ""
 
-    model = VAE(input_size[1]**2, h_dim, z_dim)
-    optimizer = optim.Adam(params=model.parameters(), lr=lr, weight_decay=0.03)
-    model.to(device)
+    generator = Generator(dim_z=z_dim, image_size=(input_image_size[2], input_image_size[3]),
+                          dim_channels=dim_channels, mode=mode)
+    optimizer_generator = optim.Adam(params=generator.parameters(), lr=lr, weight_decay=0.03)
+    discriminator = Discriminator(dim_z=z_dim, image_size=(input_image_size[2], input_image_size[3]),
+                          dim_channels=dim_channels, mode=mode)
+    discriminator_optimizer = optim.Adam(params=generator.parameters(), lr=lr, weight_decay=0.03)
+    generator.to(device)
+    discriminator.to(device)
 
-    train_vae_model = True
-    if train_vae_model:
-        print(f"Starting train VAE for mnist {mnist_version}")
-        train_vae(model, data_loader_train, data_loader_test, batch_size, lr,
+    train_gan(model, data_loader_train, data_loader_test, batch_size, lr,
               device, optimizer, epoch_num, checkpoints_dir_path, writer,
               lr_factor, lr_change_epoch, max_grad_norm,
               latest_checkpoint_path="")
-    else:
-        checkpoint_path = "/Users/shir.barzel/DeepLearningCourseOS/EX3/results//29_12_21_22_25/Kingsma-14.pth"
-        checkpoint = torch.load(checkpoint_path)
-        model.load_state_dict(checkpoint['model_state_dict'])
-        optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
-        first_epoch = checkpoint['epoch']
-        number_of_labeled_samples_options = [100, 600, 1000, 3000]
-        print(f"checkpoint path: {checkpoint_path} for mnist {mnist_version}")
-        for number_of_labeled_samples in number_of_labeled_samples_options:
-            classifier = train_classifier(model.encoder, data_loader_train, number_of_labeled_samples, num_of_classes)
-            accuracy = evaluate_classifier(classifier, model.encoder, data_loader_test)
-            print(f"For {number_of_labeled_samples} label samples, accuracy: {accuracy * 100}, error: {(1 - accuracy) * 100}")
+
+    #
+    # else:
+    #     checkpoint_path = "/Users/shir.barzel/DeepLearningCourseOS/EX3/results/29_12_21_21_21/Kingsma-10.pth"
+    #     checkpoint = torch.load(checkpoint_path)
+    #     model.load_state_dict(checkpoint['model_state_dict'])
+    #     optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+    #     first_epoch = checkpoint['epoch']
+    #
+    # number_of_labeled_samples_options = [100, 600, 1000, 3000]
+    # print(f"checkpoint path: {checkpoint_path} for mnist {mnist_version}")
+    # for number_of_labeled_samples in number_of_labeled_samples_options:
+    #     classifier = train_classifier(model.encoder, data_loader_train, number_of_labeled_samples, num_of_classes)
+    #     accuracy = evaluate_classifier(classifier, model.encoder, data_loader_test)
+    #     print(f"For {number_of_labeled_samples} label samples, accuracy: {accuracy * 100}, error: {(1 - accuracy) * 100}")
