@@ -2,7 +2,7 @@ import torch
 
 
 def elbo_loss(x, x_hat, kl_divergence):
-    return torch.mean(torch.norm(x - x_hat, dim=-1)**2 + 0.8 * kl_divergence)
+    return torch.mean(torch.norm(x - x_hat, dim=-1)**2 + 0.1 * kl_divergence)
 
 def evaluate_model(data, model, device):
     with torch.no_grad():

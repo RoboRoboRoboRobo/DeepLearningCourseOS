@@ -95,7 +95,7 @@ def train_gan(generator, discriminator, data_loader_train, batch_size, lr0, lam,
 
 def train_discriminator(x_real, generator, discriminator, discriminator_optimizer, batch_size, lam, device, variation):
 
-    z = Variable(torch.randn((batch_size, generator.dim_z)))
+    z = Variable(torch.randn(batch_size, generator.dim_z, 1, 1))
     if device.type == 'cuda':
         z = z.cuda()
     x_gen = generator(z)
@@ -121,8 +121,7 @@ def train_discriminator(x_real, generator, discriminator, discriminator_optimize
 
 
 def train_generator(generator, discriminator, generator_optimizer, batch_size, device, variation):
-
-    z = Variable(torch.randn((batch_size, generator.dim_z)))
+    z = Variable(torch.randn(batch_size, generator.dim_z, 1, 1))
     if device.type == 'cuda':
         z = z.cuda()
     x_gen = generator(z)

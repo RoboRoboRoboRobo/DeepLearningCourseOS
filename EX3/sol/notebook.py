@@ -85,15 +85,15 @@ writer = SummaryWriter(events_dir)
 
 mode = 'train'
 
-# checkpoint_path = "/Users/shir.barzel/DeepLearningCourseOS/EX3/results/01_01_22_17_47/Kingsma-10.pth"
-checkpoint_path = ""
+checkpoint_path = "/Users/shir.barzel/DeepLearningCourseOS/EX3/results//01_01_22_23_32/Kingsma-12.pth"
+# checkpoint_path = ""
 
 if mode == 'train':
     model = VAE(input_size[1]**2, h_dim, z_dim)
     optimizer = optim.Adam(params=model.parameters(), lr=lr, weight_decay=0.03)
     model.to(device)
 
-    train_vae_model = True
+    train_vae_model = False
     if train_vae_model:
         print(f"Starting train VAE for mnist {mnist_version}")
         train_vae(model, data_loader_train, data_loader_test, batch_size, lr,
