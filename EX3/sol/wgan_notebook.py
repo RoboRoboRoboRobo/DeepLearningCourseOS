@@ -12,16 +12,19 @@ from train_gan import train_gan
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 print(device)
 
+variation = 'wgan'
+
 # algorithm parameters
 batch_size = 64
 z_dim = 128
 input_image_size = (batch_size, 1, 28, 28)
 num_of_classes = 10
 dim_channels = 128
-
 epoch_num = 15
 lr = 2e-4
 lr_factor = 1.3
+lambda_val = 10.0
+num_of_disc_iter = 5
 lr_change_epoch = 100
 max_grad_norm = 100
 
@@ -86,22 +89,24 @@ mode = 'train'
 if mode == 'train':
     checkpoint_e_start = 0
     if (checkpoint_e_start > 0):
-        cpt_path = checkpoints_dir_path + f"/Kingsma-{checkpoint_e_start}.pth"
+        cpt_path = checkpoints_dir_path + f"/Gulrajani-{checkpoint_e_start}.pth"
     else:
         cpt_path = ""
 
+    betas = (0.0, 0.9)
     generator = Generator(dim_z=z_dim, image_size=(input_image_size[2], input_image_size[3]),
-                          dim_channels=dim_channels, mode=mode)
-    optimizer_generator = optim.Adam(params=generator.parameters(), lr=lr, weight_decay=0.03)
-    discriminator = Discriminator(dim_z=z_dim, image_size=(input_image_size[2], input_image_size[3]),
-                          dim_channels=dim_channels, mode=mode)
-    discriminator_optimizer = optim.Adam(params=generator.parameters(), lr=lr, weight_decay=0.03)
+                          dim_channels=dim_channels, mode=variation)
+    generator_optimizer = optim.Adam(params=generator.parameters(), lr=lr, betas=betas)
     generator.to(device)
+
+    discriminator = Discriminator(dim_z=z_dim, image_size=(input_image_size[2], input_image_size[3]),
+                          dim_channels=dim_channels, mode=variation)
+    discriminator_optimizer = optim.Adam(params=generator.parameters(), lr=lr, betas=betas)
     discriminator.to(device)
 
-    train_gan(model, data_loader_train, data_loader_test, batch_size, lr,
-              device, optimizer, epoch_num, checkpoints_dir_path, writer,
-              lr_factor, lr_change_epoch, max_grad_norm,
+    train_gan(generator, discriminator, data_loader_train, batch_size, lr, lambda_val,
+              device, generator_optimizer, discriminator_optimizer, epoch_num, checkpoints_dir_path, writer,
+              num_of_disc_iter, variation,
               latest_checkpoint_path="")
 
     #

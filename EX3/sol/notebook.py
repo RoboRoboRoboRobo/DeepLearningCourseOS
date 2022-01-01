@@ -21,7 +21,7 @@ input_size = (batch_size, 28, 28)
 num_of_classes = 10
 h_dim = 600
 z_dim = 128
-epoch_num = 15
+epoch_num = 25
 lr = 1e-3
 lr_factor = 1.3
 lr_change_epoch = 100
@@ -84,14 +84,11 @@ events_dir = checkpoints_dir_path + slash + 'events' + slash
 writer = SummaryWriter(events_dir)
 
 mode = 'train'
-## train all models with dropout, weight decay and batch normalization options
-if mode == 'train':
-    checkpoint_e_start = 0
-    if (checkpoint_e_start > 0):
-        cpt_path = checkpoints_dir_path + f"/Kingsma-{checkpoint_e_start}.pth"
-    else:
-        cpt_path = ""
 
+# checkpoint_path = "/Users/shir.barzel/DeepLearningCourseOS/EX3/results/01_01_22_17_47/Kingsma-10.pth"
+checkpoint_path = ""
+
+if mode == 'train':
     model = VAE(input_size[1]**2, h_dim, z_dim)
     optimizer = optim.Adam(params=model.parameters(), lr=lr, weight_decay=0.03)
     model.to(device)
@@ -102,9 +99,8 @@ if mode == 'train':
         train_vae(model, data_loader_train, data_loader_test, batch_size, lr,
               device, optimizer, epoch_num, checkpoints_dir_path, writer,
               lr_factor, lr_change_epoch, max_grad_norm,
-              latest_checkpoint_path="")
+              latest_checkpoint_path=checkpoint_path)
     else:
-        checkpoint_path = "/Users/shir.barzel/DeepLearningCourseOS/EX3/results//29_12_21_22_25/Kingsma-14.pth"
         checkpoint = torch.load(checkpoint_path)
         model.load_state_dict(checkpoint['model_state_dict'])
         optimizer.load_state_dict(checkpoint['optimizer_state_dict'])

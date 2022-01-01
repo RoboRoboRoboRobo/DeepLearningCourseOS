@@ -2,7 +2,7 @@ import torch
 
 
 def elbo_loss(x, x_hat, kl_divergence):
-    return torch.mean(torch.norm(x - x_hat, dim=-1)**2 + 0.3 * kl_divergence)
+    return torch.mean(torch.norm(x - x_hat, dim=-1)**2 + 0.8 * kl_divergence)
 
 def evaluate_model(data, model, device):
     with torch.no_grad():
@@ -20,6 +20,7 @@ def train_vae(model, trn_dataset, tst_dataset, batch_size, lr,
     if latest_checkpoint_path == "":
         first_epoch = 0
     else:
+        print("\n******Loading latest checkpoint path******\n")
         # load previous training checkpoint
         checkpoint = torch.load(latest_checkpoint_path)
         model.load_state_dict(checkpoint['model_state_dict'])
