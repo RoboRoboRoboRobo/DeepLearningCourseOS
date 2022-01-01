@@ -47,12 +47,12 @@ elif user == "Shir":
 mnist_version = "fashion"
 
 if mnist_version == "digits":
-    transform = transforms.Compose([transforms.Resize(32), transforms.ToTensor(), Normalize(mean=0.1307, std=0.3081), lambda x: x.reshape(
+    transform = transforms.Compose([transforms.Resize(32), transforms.ToTensor(), Normalize(mean=0.5, std=0.5), lambda x: x.reshape(
         -1)])  ## (*) the mean and std of the train dataset were obtained using the code below
     mnist_train_data = datasets.MNIST(assignment_path, download=True, transform=transform, train=True)
     mnist_test_data = datasets.MNIST(assignment_path, download=True, transform=transform, train=False)
 elif mnist_version == "fashion":
-    transform = transforms.Compose([transforms.Resize(32), transforms.ToTensor(), Normalize(mean=0.2860, std=0.3530), lambda x: x.reshape(-1)]) ## (*) the mean and std of the train dataset were obtained using the code below
+    transform = transforms.Compose([transforms.Resize(32), transforms.ToTensor(), Normalize(mean=0.5, std=0.5), lambda x: x.reshape(-1)]) ## (*) the mean and std of the train dataset were obtained using the code below
     mnist_train_data = datasets.FashionMNIST(assignment_path, download=True, transform=transform, train=True)
     mnist_test_data = datasets.FashionMNIST(assignment_path, download=True, transform=transform, train=False)
 
