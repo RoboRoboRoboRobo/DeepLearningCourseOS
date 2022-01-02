@@ -70,7 +70,7 @@ def train_vae(model, trn_dataset, tst_dataset, batch_size, lr,
         acc_trn = evaluate_model(trn_dataset, model, device)
         acc_tst = evaluate_model(tst_dataset, model, device)
         # save checkpoint at the end of each epoch
-        curr_checkpoint_path = checkpoints_dir_path + f'/Kingsma-{e}.pth'
+        curr_checkpoint_path = checkpoints_dir_path + f'/Kingsma-{e}-z_dim-{model.z_dim}.pth'
         print(curr_checkpoint_path)
         torch.save({'epoch': e, 'model_state_dict': model.state_dict(),
                     'optimizer_state_dict': optimizer.state_dict(),

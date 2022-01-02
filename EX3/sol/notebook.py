@@ -20,8 +20,8 @@ batch_size = 16
 input_size = (batch_size, 28, 28)
 num_of_classes = 10
 h_dim = 600
-z_dim = 128
-epoch_num = 25
+z_dim = 50
+epoch_num = 100
 lr = 1e-3
 lr_factor = 1.3
 lr_change_epoch = 100
@@ -43,14 +43,16 @@ elif user == "Shir":
     slash = "/"
 
 # save fashion MNIST dataset to drive
-mnist_version = "fashion"
+mnist_version = "digits"
 
 if mnist_version == "digits":
+    print("Using digits mnist")
     transform = transforms.Compose([transforms.ToTensor(), Normalize(mean=0.1307, std=0.3081), lambda x: x.reshape(
         -1)])  ## (*) the mean and std of the train dataset were obtained using the code below
     mnist_train_data = datasets.MNIST(assignment_path, download=True, transform=transform, train=True)
     mnist_test_data = datasets.MNIST(assignment_path, download=True, transform=transform, train=False)
 elif mnist_version == "fashion":
+    print("Using fashion mnist")
     transform = transforms.Compose([transforms.ToTensor(), Normalize(mean=0.2860, std=0.3530), lambda x: x.reshape(-1)]) ## (*) the mean and std of the train dataset were obtained using the code below
     mnist_train_data = datasets.FashionMNIST(assignment_path, download=True, transform=transform, train=True)
     mnist_test_data = datasets.FashionMNIST(assignment_path, download=True, transform=transform, train=False)
@@ -85,7 +87,7 @@ writer = SummaryWriter(events_dir)
 
 mode = 'train'
 
-checkpoint_path = "/Users/shir.barzel/DeepLearningCourseOS/EX3/results//01_01_22_23_32/Kingsma-12.pth"
+checkpoint_path = "/Users/shir.barzel/DeepLearningCourseOS/EX3/results/29_12_21_18_39/Kingsma-8.pth"
 # checkpoint_path = ""
 
 if mode == 'train':
@@ -100,14 +102,14 @@ if mode == 'train':
               device, optimizer, epoch_num, checkpoints_dir_path, writer,
               lr_factor, lr_change_epoch, max_grad_norm,
               latest_checkpoint_path=checkpoint_path)
-    else:
-        checkpoint = torch.load(checkpoint_path)
-        model.load_state_dict(checkpoint['model_state_dict'])
-        optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
-        first_epoch = checkpoint['epoch']
-        number_of_labeled_samples_options = [100, 600, 1000, 3000]
-        print(f"checkpoint path: {checkpoint_path} for mnist {mnist_version}")
-        for number_of_labeled_samples in number_of_labeled_samples_options:
-            classifier = train_classifier(model.encoder, data_loader_train, number_of_labeled_samples, num_of_classes)
-            accuracy = evaluate_classifier(classifier, model.encoder, data_loader_test)
-            print(f"For {number_of_labeled_samples} label samples, accuracy: {accuracy * 100}, error: {(1 - accuracy) * 100}")
+    # else:
+    checkpoint = torch.load(checkpoint_path)
+    model.load_state_dict(checkpoint['model_state_dict'])
+    optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+    first_epoch = checkpoint['epoch']
+    number_of_labeled_samples_options = [100, 600, 1000, 3000]
+    print(f"checkpoint path: {checkpoint_path} for mnist {mnist_version}")
+    for number_of_labeled_samples in number_of_labeled_samples_options:
+        classifier = train_classifier(model.encoder, data_loader_train, number_of_labeled_samples, num_of_classes)
+        accuracy = evaluate_classifier(classifier, model.encoder, data_loader_test)
+        print(f"For {number_of_labeled_samples} label samples, accuracy: {accuracy * 100}, error: {(1 - accuracy) * 100}")
