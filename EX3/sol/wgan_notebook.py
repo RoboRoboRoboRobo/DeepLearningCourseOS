@@ -32,7 +32,7 @@ max_grad_norm = 100
 OFIR   C:\\Users\ofir-kr\PycharmProjects\DeepLearningCourseOS\EX2\\"
 SHIR   /Users/shir.barzel/DeepLearningCourseOS/EX2/
 """
-user = "Shir"
+user = "Colab"
 
 if user == "Ofir":
     slash = "\\"
@@ -41,6 +41,10 @@ if user == "Ofir":
 elif user == "Shir":
     assignment_path = "/Users/shir.barzel/DeepLearningCourseOS/EX3/"
     checkpoints_dir_path = '/Users/shir.barzel/DeepLearningCourseOS/EX3/results/'
+    slash = "/"
+elif user == "Colab":
+    assignment_path = "/content/DeepLearningCourseOS/EX3/"
+    checkpoints_dir_path = '/content/DeepLearningCourseOS/EX3/results/'
     slash = "/"
 
 # save fashion MNIST dataset to drive

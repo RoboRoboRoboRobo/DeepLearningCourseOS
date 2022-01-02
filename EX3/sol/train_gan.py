@@ -49,7 +49,7 @@ def train_gan(generator, discriminator, data_loader_train, batch_size, lr0, lam,
 
             # move input and output to GPU
             if device.type == 'cuda':
-                x = x.cuda()
+                x_real = x_real.cuda()
 
             if variation == 'wgan':
                 loss_dis_gen, loss_dis_real, grad_penalty, grad_norm = train_discriminator(x_real, mone, one, generator, discriminator, discriminator_optimizer,
