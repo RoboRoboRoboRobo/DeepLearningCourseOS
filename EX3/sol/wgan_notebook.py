@@ -17,7 +17,7 @@ variation = 'wgan'
 # algorithm parameters
 batch_size = 64
 z_dim = 100
-input_image_size = (batch_size, 1, 28, 28)
+input_image_size = (batch_size, 1, 32, 32)
 num_of_classes = 10
 dim_channels = 1
 epoch_num = 15
@@ -32,7 +32,7 @@ max_grad_norm = 100
 OFIR   C:\\Users\ofir-kr\PycharmProjects\DeepLearningCourseOS\EX2\\"
 SHIR   /Users/shir.barzel/DeepLearningCourseOS/EX2/
 """
-user = "Colab"
+user = "Shir"
 
 if user == "Ofir":
     slash = "\\"

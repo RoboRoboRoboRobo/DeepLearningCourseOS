@@ -52,34 +52,36 @@ class Discriminator(nn.Module):
         self.conv2_wgan = nn.Conv2d(in_channels=256, out_channels=512, kernel_size=4, stride=2, padding=1)
         self.bc_norm2_wgan = nn.InstanceNorm2d(512, affine=True)
 
-        ## TODO
-        self.conv2_dcgan = nn.Conv2d(in_channels=dim_channels, out_channels=dim_channels, kernel_size=3, stride=2)
+        self.bc_norm2_dcgan = nn.InstanceNorm2d(512, affine=True)
+
+        self.conv2_dcgan = nn.Conv2d(in_channels=256, out_channels=512, kernel_size=4, stride=2, padding=1),
         self.mean_pool = nn.AvgPool2d(kernel_size=2)
 
         self.conv3_wgan = nn.Conv2d(in_channels=512, out_channels=1024, kernel_size=4, stride=2, padding=1)
         self.bc_norm3_wgan = nn.InstanceNorm2d(1024, affine=True)
 
+        self.conv3_dcgan = nn.Conv2d(in_channels=512, out_channels=1024, kernel_size=4, stride=2, padding=1)
+        self.bc_norm3_dcgan = nn.InstanceNorm2d(1024, affine=True)
+
         self.conv4_wgan = nn.Conv2d(in_channels=1024, out_channels=1, kernel_size=4, stride=1, padding=0)
 
         self.sigmoid = nn.Sigmoid()
         self.tanh = nn.Tanh()
-        # output_size = int(8 * dim_channels * (image_size[0] / 4) * (image_size[1] / 4))
-        if mode == "wgan":
-            output_size = 3200 # TODO
-        elif mode == "dcgan":
-            output_size = 4608  # TODO
-        self.linear = nn.Linear(output_size, 1)
 
     def forward(self, input):
         if self.mode == 'dcgan':
             x = self.conv1(input)
             x = self.leaky_relu(x)
-            x = self.bc_norm(x)
+
             x = self.conv2_dcgan(x)
-            x = self.bc_norm(x)
+            x = self.bc_norm2_dcgan(x)
             x = self.leaky_relu(x)
-            x = self.conv3_wgan(x)
-            # x = self.tanh(x)
+
+            x = self.conv3_dcgan(x)
+            x = self.bc_norm3_dcgan(x)
+            x = self.leaky_relu(x)
+
+            x = self.sigmoid(x)
 
         elif self.mode == 'wgan':
             x = self.conv1(input)

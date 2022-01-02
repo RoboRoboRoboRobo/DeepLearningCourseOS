@@ -149,7 +149,7 @@ def train_discriminator(x_real, mone, one, generator, discriminator, discriminat
         loss_grad_pen = lam * grad_penalty
         loss_grad_pen.backward()
         discriminator_optimizer.step()
-        return loss_gen, loss_real, grad_penalty, grad_norm
+        return loss_gen, loss_real, grad_penalty, grad_norm[-1][-1]
 
     elif variation == "dcgan":
         loss = torch.mean(torch.log(prob_real) + torch.log(1-prob_gen))
@@ -180,11 +180,13 @@ def train_generator(generator, mone, ones, discriminator, generator_optimizer, b
 def gradient_penalty(discriminator, x_real, x_gen, device):
 
     batch_size = x_real.shape[0]
-    eps = torch.rand(batch_size, 1, 1, 1)
-    eps = eps.expand_as(x_real)
+    eps = torch.FloatTensor(batch_size, 1, 1, 1).uniform_(0, 1)
+    eps = eps.expand(batch_size, discriminator.dim, discriminator.image_size[0], discriminator.image_size[0])
     if device.type == 'cuda':
         eps = eps.cuda()
-    x_mixed = eps * x_real + (1-eps) * x_gen  # TODO check expand_as()
+    x_mixed = eps * x_real + ((1-eps) * x_gen)  # TODO check expand_as()
+    if device.type == 'cuda':
+        x_mixed = x_mixed.cuda()
     x_mixed = Variable(x_mixed, requires_grad=True)
 
     prob_mixed = discriminator(x_mixed)
