@@ -21,7 +21,7 @@ input_image_size = (batch_size, 1, 28, 28)
 num_of_classes = 10
 dim_channels = 1
 epoch_num = 15
-lr = 2e-4
+lr = 1e-4
 lr_factor = 1.3
 lambda_val = 10.0
 num_of_disc_iter = 5
@@ -47,12 +47,11 @@ elif user == "Shir":
 mnist_version = "fashion"
 
 if mnist_version == "digits":
-    transform = transforms.Compose([transforms.Resize(32), transforms.ToTensor(), Normalize(mean=0.5, std=0.5), lambda x: x.reshape(
-        -1)])  ## (*) the mean and std of the train dataset were obtained using the code below
+    transform = transforms.Compose([transforms.Resize(32), transforms.ToTensor(), Normalize(mean=0.5, std=0.5)])  ## (*) the mean and std of the train dataset were obtained using the code below
     mnist_train_data = datasets.MNIST(assignment_path, download=True, transform=transform, train=True)
     mnist_test_data = datasets.MNIST(assignment_path, download=True, transform=transform, train=False)
 elif mnist_version == "fashion":
-    transform = transforms.Compose([transforms.Resize(32), transforms.ToTensor(), Normalize(mean=0.5, std=0.5), lambda x: x.reshape(-1)]) ## (*) the mean and std of the train dataset were obtained using the code below
+    transform = transforms.Compose([transforms.Resize(32), transforms.ToTensor(), Normalize(mean=0.5, std=0.5)]) ## (*) the mean and std of the train dataset were obtained using the code below
     mnist_train_data = datasets.FashionMNIST(assignment_path, download=True, transform=transform, train=True)
     mnist_test_data = datasets.FashionMNIST(assignment_path, download=True, transform=transform, train=False)
 
@@ -93,7 +92,7 @@ if mode == 'train':
     else:
         cpt_path = ""
 
-    betas = (0.0, 0.9)
+    betas = (0.5, 0.999)
     generator = Generator(dim_z=z_dim, image_size=(input_image_size[2], input_image_size[3]),
                           dim_channels=dim_channels, mode=variation)
     generator_optimizer = optim.Adam(params=generator.parameters(), lr=lr, betas=betas)

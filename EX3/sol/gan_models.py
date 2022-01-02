@@ -76,10 +76,9 @@ class Discriminator(nn.Module):
             x = self.leaky_relu(x)
             x = self.bc_norm(x)
             x = self.conv2_dcgan(x)
-            x = self.leaky_relu(x)
             x = self.bc_norm(x)
-            x = x.view(-1, x.shape[1] * x.shape[2] * x.shape[3])
-            x = self.linear(x)
+            x = self.leaky_relu(x)
+            x = self.conv3_wgan(x)
             # x = self.tanh(x)
 
         elif self.mode == 'wgan':

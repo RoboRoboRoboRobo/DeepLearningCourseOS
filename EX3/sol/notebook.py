@@ -43,7 +43,7 @@ elif user == "Shir":
     slash = "/"
 
 # save fashion MNIST dataset to drive
-mnist_version = "digits"
+mnist_version = "fashion"
 
 if mnist_version == "digits":
     print("Using digits mnist")
@@ -87,7 +87,7 @@ writer = SummaryWriter(events_dir)
 
 mode = 'train'
 
-checkpoint_path = "/Users/shir.barzel/DeepLearningCourseOS/EX3/results/29_12_21_18_39/Kingsma-8.pth"
+checkpoint_path = "/Users/shir.barzel/DeepLearningCourseOS/EX3/results//02_01_22_10_38/Kingsma-21-z_dim-50.pth"
 # checkpoint_path = ""
 
 if mode == 'train':

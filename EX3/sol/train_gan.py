@@ -1,6 +1,8 @@
 import torch
 from torch.autograd import Variable
 from torch.autograd import grad as torch_grad
+import os
+from torchvision import utils
 
 def train_gan(generator, discriminator, data_loader_train, batch_size, lr0, lam,
               device, generator_optimizer, discriminator_optimizer, epoch_num, checkpoints_dir_path, writer,
@@ -23,6 +25,14 @@ def train_gan(generator, discriminator, data_loader_train, batch_size, lr0, lam,
     # epoch loop
 
     lr = lr0
+    one = torch.tensor(1, dtype=torch.float)
+    mone = one * -1
+    if device == 'cuda':
+        one = one.cuda()
+        mone = mone.cuda()
+
+    count_gen_iterations = 0
+
     for e in epochs_range:
 
         generator.train()
@@ -32,40 +42,69 @@ def train_gan(generator, discriminator, data_loader_train, batch_size, lr0, lam,
         running_loss_gen = 0
         # batch loop
         for i, (x_real, _) in enumerate(data_loader_train):
+
+            # Requires grad, Generator requires_grad = False
+            for p in discriminator.parameters():
+                p.requires_grad = True
+
             # move input and output to GPU
             if device.type == 'cuda':
                 x = x.cuda()
 
-            loss_dis, grad_penalty, grad_norm = train_discriminator(x_real, generator, discriminator, discriminator_optimizer,
-                                            batch_size, lam, device, variation)
+            if variation == 'wgan':
+                loss_dis_gen, loss_dis_real, grad_penalty, grad_norm = train_discriminator(x_real, mone, one, generator, discriminator, discriminator_optimizer,
+                                                batch_size, lam, device, variation)
+                if i % 20 == 0 and i > 0:
+                    print("===========================")
+                    print(f"Train"
+                          f"Batch num: {i}/{len(data_loader_train)}\n"
+                          f"Loss dis gen: {loss_dis_gen}\n"
+                          f"Loss dis real: {loss_dis_real}\n"
+                          f"Grad penalty: {grad_penalty}\n"
+                          f"Grad norm: {grad_norm[-1]}")
+            elif variation == 'dcgan':
+                loss_dis = train_discriminator(x_real, mone, one, generator, discriminator, discriminator_optimizer,
+                                                batch_size, lam, device, variation)
 
             # backward propagate and compute gradients
             if i % num_of_disc_iter == 0:
-                loss_gen = train_generator(generator, discriminator, generator_optimizer,
+                count_gen_iterations += 1
+                for p in discriminator.parameters():
+                    p.requires_grad = False  # to avoid computation
+                loss_gen, gen_cost = train_generator(generator, mone, one, discriminator, generator_optimizer,
                                            batch_size, device, variation)
+                if i % 20 == 0 and i > 0:
+                    print("===========================")
+                    print(f"Train Gen"
+                          f"Batch num: {i}/{len(data_loader_train)}\n"
+                          f"Loss gen: {loss_gen}\n"
+                          f"Gen cost: {gen_cost}\n")
 
-            # accumulate loss
-            running_loss_dis += loss_dis.item()
-            running_loss_gen += loss_gen.item()
+            if count_gen_iterations % 100 == 0:
+                torch.save(generator, f"./generator-{e}.pkl")
+                torch.save(discriminator, f"./discriminator-{e}.pkl")
+                print('Models save to ./generator.pkl & ./discriminator.pkl ')
+                if not os.path.exists('training_result_images/'):
+                    os.makedirs('training_result_images/')
 
-            if variation == "wgan":
-                lr = (-lr0 / 1.0e05) * i + lr0
-            with torch.no_grad():
-                for param in discriminator.parameters():
-                    if not param.grad is None:
-                        param -= lr * param.grad
-                for param in generator.parameters():
-                    if not param.grad is None:
-                        param -= lr * param.grad
+                z = Variable(torch.randn(batch_size, generator.dim_z, 1, 1))
+                if device.type == 'cuda':
+                    z = z.cuda()
+                x_gen = generator(z)
+                x_gen = x_gen.mul(0.5).add(0.5)
+                x_gen = x_gen.data.cpu()[:64]
+                grid = utils.make_grid(x_gen)
+                utils.save_image(grid, 'training_result_images/img_generatori_iter_{}.png'.format(str(count_gen_iterations).zfill(3)))
 
-            if i % 20 == 0 and i > 0:
-                print("===========================")
-                print(f"Train"
-                      f"Batch num: {i}/{len(data_loader_train)}\n"
-                      f"Loss Gen: {running_loss_gen / i}\n"
-                      f"Loss Dis: {running_loss_dis / i}\n"
-                      f"Grad penalty: {grad_penalty}\n"
-                      f"Grad norm: {grad_norm[-1]}")
+            # if variation == "wgan":
+            #     lr = (-lr0 / 1.0e05) * i + lr0
+            # with torch.no_grad():
+            #     for param in discriminator.parameters():
+            #         if not param.grad is None:
+            #             param -= lr * param.grad
+            #     for param in generator.parameters():
+            #         if not param.grad is None:
+            #             param -= lr * param.grad
 
         # save checkpoint at the end of each epoch
         curr_checkpoint_path_gen = checkpoints_dir_path + f'/Gulrajani-{e}.pth'
@@ -86,41 +125,41 @@ def train_gan(generator, discriminator, data_loader_train, batch_size, lr0, lam,
         #     'Test_Accuracy': float(acc_tst)
         # }, e)
 
-        # print states at the end of each epoch
-        print(f"Epoch {e}:")
-        print(f"Training loss dis:     {running_loss_dis / len(data_loader_train)}")
-        print(f"Training loss gen:     {running_loss_gen / len(data_loader_train)}")
-        print(f"-----------------------------------------------")
-
-
-def train_discriminator(x_real, generator, discriminator, discriminator_optimizer, batch_size, lam, device, variation):
+def train_discriminator(x_real, mone, one, generator, discriminator, discriminator_optimizer, batch_size, lam, device, variation):
+    discriminator_optimizer.zero_grad()
 
     z = Variable(torch.randn(batch_size, generator.dim_z, 1, 1))
     if device.type == 'cuda':
         z = z.cuda()
+
     x_gen = generator(z)
-
-    prob_gen = discriminator(x_gen)
-    x_real = x_real.view(-1, 1, int(x_real.shape[1]**0.5), int(x_real.shape[1]**0.5))
     prob_real = discriminator(x_real)
+    prob_gen = discriminator(x_gen)
+    # x_real = x_real.view(-1, 1, int(x_real.shape[1]**0.5), int(x_real.shape[1]**0.5))
 
-    discriminator_optimizer.zero_grad()
     if variation == "wgan":
         grad_penalty, grad_norm = gradient_penalty(discriminator, x_real, x_gen, device)
-        loss = prob_gen.mean() - prob_real.mean() + lam * grad_penalty
+
+        loss_real = prob_real.mean()
+        loss_real.backward(mone)
+
+        loss_gen = prob_gen.mean()
+        loss_gen.backward(one)
+
+        loss_grad_pen = lam * grad_penalty
+        loss_grad_pen.backward()
+        discriminator_optimizer.step()
+        return loss_gen, loss_real, grad_penalty, grad_norm
+
     elif variation == "dcgan":
         loss = torch.mean(torch.log(prob_real) + torch.log(1-prob_gen))
         grad_penalty = "not_rel"
         grad_norm = "not_rel"
+        discriminator_optimizer.step()
+        return loss
 
-    loss.backward()
-
-    discriminator_optimizer.step()
-
-    return loss, grad_penalty, grad_norm
-
-
-def train_generator(generator, discriminator, generator_optimizer, batch_size, device, variation):
+def train_generator(generator, mone, ones, discriminator, generator_optimizer, batch_size, device, variation):
+    generator_optimizer.zero_grad()
     z = Variable(torch.randn(batch_size, generator.dim_z, 1, 1))
     if device.type == 'cuda':
         z = z.cuda()
@@ -128,18 +167,15 @@ def train_generator(generator, discriminator, generator_optimizer, batch_size, d
 
     prob_gen = discriminator(x_gen)
 
-    generator_optimizer.zero_grad()
     if variation == "wgan":
-        loss = - prob_gen.mean()
+        loss = prob_gen.mean()
+        loss.backward(mone)
+        g_cost = -loss
     elif variation == "dcgan":
         loss = torch.mean(torch.log(1-prob_gen))
 
-    loss.backward()
-
     generator_optimizer.step()
-
-    return loss
-
+    return loss, g_cost
 
 def gradient_penalty(discriminator, x_real, x_gen, device):
 
@@ -158,12 +194,9 @@ def gradient_penalty(discriminator, x_real, x_gen, device):
                                prob_mixed.size()),
                            create_graph=True, retain_graph=True)[0]
 
-
-    # gradients_norm = torch.sqrt(torch.sum(gradients ** 2, dim=1) + 1e-12)
-
-    gradients = gradients.view(batch_size, -1)
-    grad_norm = torch.norm(gradients, dim=-1) + 1e-12
-    return torch.mean((grad_norm - 1)**2), grad_norm
+    grad_penalty = ((gradients.norm(2, dim=1) - 1) ** 2).mean()
+    grad_norm = torch.norm(gradients, dim=-1)
+    return grad_penalty, grad_norm
 
 
 
