@@ -12,7 +12,7 @@ from train_gan import train_gan
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 print(device)
 
-variation = 'wgan'
+variation = 'dcgan'
 
 # algorithm parameters
 batch_size = 64

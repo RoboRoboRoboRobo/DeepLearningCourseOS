@@ -42,16 +42,16 @@ def train_gan(generator, discriminator, data_loader_train, batch_size, lr0, lam,
         running_loss_gen = 0
         # batch loop
         for i, (x_real, _) in enumerate(data_loader_train):
-
-            # Requires grad, Generator requires_grad = False
-            for p in discriminator.parameters():
-                p.requires_grad = True
-
-            # move input and output to GPU
-            if device.type == 'cuda':
-                x_real = x_real.cuda()
-
+            if i == data_loader_train.dataset.__len__() // batch_size:
+                break
             if variation == 'wgan':
+                # Requires grad, Generator requires_grad = False
+                for p in discriminator.parameters():
+                    p.requires_grad = True
+
+                # move input and output to GPU
+                if device.type == 'cuda':
+                    x_real = x_real.cuda()
                 loss_dis_gen, loss_dis_real, grad_penalty, grad_norm = train_discriminator(x_real, mone, one, generator, discriminator, discriminator_optimizer,
                                                 batch_size, lam, device, variation)
                 if i % 20 == 0 and i > 0:
@@ -152,11 +152,24 @@ def train_discriminator(x_real, mone, one, generator, discriminator, discriminat
         return loss_gen, loss_real, grad_penalty, grad_norm[-1][-1]
 
     elif variation == "dcgan":
-        loss = torch.mean(torch.log(prob_real) + torch.log(1-prob_gen))
-        grad_penalty = "not_rel"
-        grad_norm = "not_rel"
+        real_labels = torch.ones(batch_size)
+        fake_labels = torch.zeros(batch_size)
+
+        if device.type == 'cuda':
+            real_labels, fake_labels = Variable(real_labels).cuda(), Variable(fake_labels).cuda()
+        else:
+            real_labels, fake_labels = Variable(real_labels), Variable(fake_labels)
+
+        d_loss_real = discriminator.loss(prob_real.flatten(), real_labels)
+        d_loss_fake = discriminator.loss(prob_gen.flatten(), fake_labels)
+
+        # Optimize discriminator
+        d_loss = d_loss_real + d_loss_fake
+        discriminator.zero_grad()
+        d_loss.backward()
         discriminator_optimizer.step()
-        return loss
+
+        return d_loss
 
 def train_generator(generator, mone, ones, discriminator, generator_optimizer, batch_size, device, variation):
     generator_optimizer.zero_grad()
@@ -164,18 +177,31 @@ def train_generator(generator, mone, ones, discriminator, generator_optimizer, b
     if device.type == 'cuda':
         z = z.cuda()
     x_gen = generator(z)
-
     prob_gen = discriminator(x_gen)
 
     if variation == "wgan":
         loss = prob_gen.mean()
         loss.backward(mone)
         g_cost = -loss
+        generator_optimizer.step()
+        return loss, g_cost
     elif variation == "dcgan":
         loss = torch.mean(torch.log(1-prob_gen))
+        real_labels = torch.ones(batch_size)
+        fake_labels = torch.zeros(batch_size)
 
-    generator_optimizer.step()
-    return loss, g_cost
+        if device.type == 'cuda':
+            real_labels, fake_labels = Variable(real_labels).cuda(), Variable(fake_labels).cuda()
+        else:
+            real_labels, fake_labels = Variable(real_labels), Variable(fake_labels)
+
+        g_loss = generator.loss(prob_gen.flatten(), real_labels)
+        discriminator.zero_grad()
+        generator.zero_grad()
+        g_loss.backward()
+        generator_optimizer.step()
+        return g_loss
+
 
 def gradient_penalty(discriminator, x_real, x_gen, device):
 

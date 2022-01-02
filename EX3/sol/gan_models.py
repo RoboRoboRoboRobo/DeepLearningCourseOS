@@ -21,6 +21,9 @@ class Generator(nn.Module):
         self.deconv3 = nn.ConvTranspose2d(in_channels=256, out_channels=dim_channels, kernel_size=4, stride=2, padding=1)
         self.tanh = nn.Tanh()
 
+        if self.mode == 'dcgan':
+            self.loss = nn.BCELoss()
+
     def forward(self, input):
         x = self.deconv_linear(input)
         x = self.bc_norm_lin(x)
@@ -52,13 +55,13 @@ class Discriminator(nn.Module):
         self.conv2_wgan = nn.Conv2d(in_channels=256, out_channels=512, kernel_size=4, stride=2, padding=1)
         self.bc_norm2_wgan = nn.InstanceNorm2d(512, affine=True)
 
-        self.bc_norm2_dcgan = nn.InstanceNorm2d(512, affine=True)
+        self.bc_norm2_dcgan = nn.BatchNorm2d(512, affine=True)
 
-        self.conv2_dcgan = nn.Conv2d(in_channels=256, out_channels=512, kernel_size=4, stride=2, padding=1),
+        self.conv2_dcgan = nn.Conv2d(in_channels=256, out_channels=512, kernel_size=4, stride=2, padding=1)
         self.mean_pool = nn.AvgPool2d(kernel_size=2)
 
         self.conv3_wgan = nn.Conv2d(in_channels=512, out_channels=1024, kernel_size=4, stride=2, padding=1)
-        self.bc_norm3_wgan = nn.InstanceNorm2d(1024, affine=True)
+        self.bc_norm3_wgan = nn.BatchNorm2d(1024, affine=True)
 
         self.conv3_dcgan = nn.Conv2d(in_channels=512, out_channels=1024, kernel_size=4, stride=2, padding=1)
         self.bc_norm3_dcgan = nn.InstanceNorm2d(1024, affine=True)
@@ -67,6 +70,9 @@ class Discriminator(nn.Module):
 
         self.sigmoid = nn.Sigmoid()
         self.tanh = nn.Tanh()
+
+        if self.mode == 'dcgan':
+            self.loss = nn.BCELoss()
 
     def forward(self, input):
         if self.mode == 'dcgan':
